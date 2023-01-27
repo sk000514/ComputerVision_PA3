@@ -84,6 +84,7 @@ def updateWriterInterval(writer, metrics, epoch):
 
 
 if __name__ == '__main__':
+    save_psnr=[]
     # setup_seed(6)
     opt = TrainOptions().parse()  # get training
     train_dataset = Iharmony4Dataset(opt, is_for_train=True)
@@ -145,6 +146,7 @@ if __name__ == '__main__':
         epoch_mse, epoch_psnr, epoch_interval_metrics = evaluateModel(model, opt, test_dataloader, epoch)
         writer.add_scalar('overall/MSE', epoch_mse, epoch)
         writer.add_scalar('overall/PSNR', epoch_psnr, epoch)
+        save_psnr.append(epoch_psnr)
         updateWriterInterval(writer, epoch_interval_metrics, epoch)
 
         torch.cuda.empty_cache()
@@ -157,5 +159,7 @@ if __name__ == '__main__':
         epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
         model.update_learning_rate()  # update learning rates at the end of every epoch.
         print('Current learning rate: {}, {}'.format(model.schedulers[0].get_lr(), model.schedulers[1].get_lr()))
-
+        with open("result.txt", 'a') as f:
+            s=str(epoch_psnr)+", "+str(epoch_mse)+"\n"
+            f.write(s)
     writer.close()

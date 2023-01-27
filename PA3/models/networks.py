@@ -279,10 +279,9 @@ def get_act_dconv(act, dims_in, dims_out, kernel, stride, padding, bias):
     conv.append(nn.ConvTranspose2d(dims_in, dims_out, kernel_size=kernel, stride=2, padding=1, bias=False))
     return nn.Sequential(*conv)
 
-
 class RainNet(nn.Module):
     def __init__(self, input_nc, output_nc, ngf=64, norm_layer=RAIN,
-                 norm_type_indicator=[0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+                 norm_type_indicator=[0, 0, 0, 0, 0, 0, 0, 1,1,1,1,1,1,1],
                  use_dropout=False, use_attention=True):
         super(RainNet, self).__init__()
         self.input_nc = input_nc
@@ -291,13 +290,160 @@ class RainNet(nn.Module):
         self.use_attention = use_attention
         norm_type_list = [get_norm_layer('instance'), get_norm_layer('rain')]
         # -------------------------------Network Settings-------------------------------------
+        self.act2=nn.ReLU()
+        self.layer0=nn.Conv2d(input_nc,ngf,4,2,1)
+
+        self.act1=nn.LeakyReLU()
+        self.layer1=nn.Conv2d(ngf,ngf*2,4,2,1)
+        self.norm_layer1=norm_type_list[norm_type_indicator[0]](2*ngf)
+
+        self.layer2=nn.Conv2d(ngf*2,ngf*4,4,2,1)
+        self.norm_layer2=norm_type_list[norm_type_indicator[1]](4*ngf)
+
+        self.layer3=nn.Conv2d(ngf*4,ngf*8,4,2,1)
+        self.norm_layer3=norm_type_list[norm_type_indicator[2]](8*ngf)
+
+        self.layer4=nn.Conv2d(ngf*8,ngf*8,4,2,1)
+        self.norm_layer4=norm_type_list[norm_type_indicator[3]](8*ngf)
+
+        self.layer5=nn.Conv2d(ngf*8,ngf*8,4,2,1)
+        self.norm_layer5=norm_type_list[norm_type_indicator[4]](8*ngf)
+
+        self.layer6=nn.Conv2d(ngf*8,ngf*8,4,2,1)
+        self.norm_layer6=norm_type_list[norm_type_indicator[5]](8*ngf)
+
+        self.layer7=nn.Conv2d(ngf*8,ngf*8,4,2,1)
+        self.norm_layer7=norm_type_list[norm_type_indicator[6]](8*ngf)
+        
+        self.layer8=nn.ConvTranspose2d(ngf*8,ngf*8,4,2,1)
+        self.norm_layer8=norm_type_list[norm_type_indicator[7]](8*ngf)
+
+        self.layer9=nn.ConvTranspose2d(ngf*16,ngf*8,4,2,1)
+        self.norm_layer9=norm_type_list[norm_type_indicator[8]](8*ngf)
+
+        self.layer10=nn.ConvTranspose2d(ngf*16,ngf*8,4,2,1)
+        self.norm_layer10=norm_type_list[norm_type_indicator[9]](8*ngf)
+
+        self.layer11=nn.ConvTranspose2d(ngf*16,ngf*8,4,2,1)
+        self.norm_layer11=norm_type_list[norm_type_indicator[10]](8*ngf)
+
+        self.layer12=nn.ConvTranspose2d(ngf*16,ngf*4,4,2,1)
+        self.norm_layer12=norm_type_list[norm_type_indicator[11]](4*ngf)
+
+        self.layer13=nn.ConvTranspose2d(ngf*8,ngf*2,4,2,1)
+        self.norm_layer13=norm_type_list[norm_type_indicator[12]](2*ngf)
+
+        self.layer14=nn.ConvTranspose2d(ngf*4,ngf,4,2,1)
+        self.norm_layer14=norm_type_list[norm_type_indicator[13]](ngf)
+
+        self.layer15=nn.ConvTranspose2d(2*ngf,output_nc,4,2,1)
+        self.tanh_15=nn.Tanh()
+
+        self.attention1=nn.Conv2d(8*ngf,8*ngf,1,1,0)
+        self.attention1_sigmoid=nn.Sigmoid()
+
+        self.attention2=nn.Conv2d(4*ngf,4*ngf,1,1,0)
+
+        self.attention3=nn.Conv2d(2*ngf,2*ngf,1,1,0)
+
 
         # fill the blank
 
 
     def forward(self, x, mask):
         # fill the blank
+        ######################################################################################
+        #이 코드는 step 2에 대한 코드이다.                                                        #
+        #이를 step 1을 확인하기 위해 바꾸려면 line 392, 398, 404, 410, 416, 426, 436 의 주석을 없애고 # 
+        #line 393, 399, 405, 411, 417, 427, 437을 주석처리한 후                                 #
+        #line 284의 norm_type_indicator의 모든 항을 0으로 바꾼 후 실행시키면 된다.                   #
+        ######################################################################################
+        x0=self.layer0(x)
+        
+        x1=self.act1(x0)
+        x1=self.layer1(x1)
+        x1=self.norm_layer1(x1)
 
+        x2=self.act1(x1)
+        x2=self.layer2(x2)
+        x2=self.norm_layer2(x2)
+
+        x3=self.act1(x2)
+        x3=self.layer3(x3)
+        x3=self.norm_layer3(x3)
+        
+        x4=self.act1(x3)
+        x4=self.layer4(x4)
+        x4=self.norm_layer4(x4)
+        
+        x5=self.act1(x4)
+        x5=self.layer5(x5)
+        x5=self.norm_layer5(x5)
+        
+        x6=self.act1(x5)
+        x6=self.layer6(x6)
+        x6=self.norm_layer6(x6)
+        
+        x7=self.act1(x6)
+        x7=self.layer7(x7)
+
+        out=self.act2(x7)
+        out=self.layer8(out)
+        # out=self.norm_layer8(out)
+        out=self.norm_layer8(out,mask)
+        out=torch.cat((out,x6),1)
+        
+        out=self.act2(out)
+        out=self.layer9(out)
+        # out=self.norm_layer9(out)
+        out=self.norm_layer9(out,mask)
+        out=torch.cat((out,x5),1)
+
+        out=self.act2(out)
+        out=self.layer10(out)
+        # out=self.norm_layer10(out)
+        out=self.norm_layer10(out,mask)
+        out=torch.cat((out,x4),1)
+
+        out=self.act2(out)
+        out=self.layer11(out)
+        # out=self.norm_layer11(out)
+        out=self.norm_layer11(out,mask)
+        out=torch.cat((out,x3),1)
+
+        out=self.act2(out)
+        out=self.layer12(out)
+        # out=self.norm_layer12(out)
+        out=self.norm_layer12(out,mask)
+        out=torch.cat((out,x2),1)
+
+        tmp=self.attention1(out)
+        tmp=self.attention1_sigmoid(tmp)
+        out=tmp*out
+
+        out=self.act2(out)
+        out=self.layer13(out)
+        # out=self.norm_layer13(out)
+        out=self.norm_layer13(out,mask)
+        out=torch.cat((out,x1),1)
+
+        tmp=self.attention2(out)
+        tmp=self.attention1_sigmoid(tmp)
+        out=tmp*out
+
+        out=self.act2(out)
+        out=self.layer14(out)
+        # out=self.norm_layer14(out)
+        out=self.norm_layer14(out,mask)
+        out=torch.cat((out,x0),1)
+
+        tmp=self.attention3(out)
+        tmp=self.attention1_sigmoid(tmp)
+        out=tmp*out
+
+        out=self.layer15(out)
+        out=self.tanh_15(out)
+        
         return out
 
     def processImage(self, x, mask, background=None):
@@ -715,4 +861,3 @@ class NLayerDiscriminator(nn.Module):
                 return x, sim_sum, feat_g, feat_l
             return x, sim_sum
         return (x + sim_sum) * 0.5
-

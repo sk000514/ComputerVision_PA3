@@ -28,10 +28,11 @@ def load_network(cfg):
 
 
     # change the path to your own checkpoint path
-    load_path = os.path.join(cfg.checkpoints_dir, cfg.name, 'latest_net_G.pth')
+    load_path = os.path.join(cfg.checkpoints_dir, 'scratch',cfg.name, '16_net_G.pth')
 
-    #if not os.path.exists(load_path):
-    #    raise FileExistsError, print('%s not exists. Please check the file'%(load_path))
+
+    if not os.path.exists(load_path):
+        print('%s not exists. Please check the file'%(load_path))
     print(f'loading the model from {load_path}')
     state_dict = torch.load(load_path)
     util.copy_state_dict(net.state_dict(), state_dict)
